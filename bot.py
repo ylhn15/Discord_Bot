@@ -14,12 +14,16 @@ class Bot(discord.Client):
             quotes = []
 
     async def on_message(self, message):
-        keyword = message.content
+        keyword = message.content.split(" ", 1)[0]
         if message.author == client.user:
             return
-        if keyword.startswith('!quote') or keyword.startswith('!q'):
+        if keyword == '!quote' or keyword == '!q':
             await message.channel.send(self.get_random_quote(message, self.quotes))
-        if keyword.startswith('!lyrics') or keyword.startswith('!l'):
+        if keyword == '!quoteWithId' or keyword == '!qi':
+            await message.channel.send(self.get_quote_by_id(message, self.quotes))
+        if keyword == '!deleteQuote' or keyword == '!dq':
+            await message.channel.send(self.delete_quote_by_id(message, self.quotes))
+        if keyword == '!lyrics' or keyword == '!l':
             searchterm = message.content.split(" ", 1)
             if len(searchterm) > 1:
                 await message.channel.send("Suche nach " + searchterm[1])
@@ -33,7 +37,7 @@ class Bot(discord.Client):
             chunks = ([lyrics[i: i + max_chunk_size] for i in range(0, len(lyrics), max_chunk_size)])
             for text in chunks:
                 await message.channel.send(text)
-        if keyword.startswith('!addQuote') or keyword.startswith('!aq'):
+        if keyword == '!addQuote' or keyword == '!aq':
             await message.channel.send(self.add_quote(message))
         if message.author.id != 372092465349656577:
             await message.channel.send(message.author.name + " ist dumm")
@@ -47,21 +51,51 @@ class Bot(discord.Client):
 
     def get_random_quote(self, message, quotes):
         random_number = random.randint(0, (len(self.quotes) - 1))
-        quote = str(quotes[random_number])
-        if "by" not in quote:
-            quote = "\"" + str(self.quotes[random_number]) + "\" - Taylor Swift"
-        else:
-            quote = "\"" + quote.replace("by ", "\" - ")
-            return quote
+        quote = quotes[random_number]
+        return quote['quote'] + " - " + quote['author']
+
+    def get_quote_by_id(self, message, quotes):
+        quoteId = message.content.split(" ",1)[1]
+        print(quoteId)
+        for quote in quotes:
+            if quote['id'] == int(quoteId):
+                return quote['quote'] + " - " + quote['author']
+        return "Quote not found"
 
     def add_quote(self, message):
+        if len(self.quotes) > 0:
+            lastQuote = self.quotes[len(self.quotes) - 1]
+            try:
+                lastId = int(lastQuote['id']) + 1
+                # if lastId > len(self.quotes) - 1:
+                    # lastId = len(self.quotes)
+            except KeyError:
+                lastId = 0
+        else:
+            lastId = 0
         newQuote = message.content.split(" ", 1)[1].replace("\"", "")
         if "by" not in newQuote:
             return "Format: {Zitat} by {Autor}"
-        self.quotes.append(newQuote)
+        quote = {
+            "id" : lastId,
+            "author" : newQuote.split("by", 1)[1],
+            "quote" : newQuote.split("by", 1)[0]
+        }
+        self.quotes.append(quote)
         with open('quotes.json', 'w') as fp:
             json.dump(self.quotes, fp)
-            return "added quote \"" + newQuote + "\" to quotes"
+            return "added quote \"" + newQuote + "\" to quotes with id: " + str(lastId)
+
+    def delete_quote_by_id(self, message, quotes):
+        quoteId = message.content.split(" ",1)[1]
+        print(quoteId)
+        for quote in quotes:
+            if quote['id'] == int(quoteId):
+                with open('quotes.json', 'w') as fp:
+                    quotes.remove(quote)
+                    json.dump(self.quotes, fp)
+                    return "removed quote with id: " + quoteId
+        return "Quote not found"
 
     def get_lyrics(self, searchterm):
         url = ""
