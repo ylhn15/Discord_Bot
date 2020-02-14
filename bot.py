@@ -17,6 +17,9 @@ class Bot(discord.Client):
         keyword = message.content.split(" ", 1)[0]
         if message.author == client.user:
             return
+        if keyword == '!help' or keyword == '!h':
+            help_msg = "!(q)uote - random quote. \n!quoteWithId/!qi {id] - quote with given ID. \n!deleteQuote/!qd {ID] - delete quote with given ID. \n!(l)yrics {searchterm} - search songtexte.com for given searchterm and returns the lyrics. \n!addQuote/!aq {Zitat} by {Author} - add quote to the databse.\n "
+            await message.channel.send(help_msg + "\n https://github.com/ylhn15/Discord_Bot")
         if keyword == '!quote' or keyword == '!q':
             await message.channel.send(self.get_random_quote(message, self.quotes))
         if keyword == '!quoteWithId' or keyword == '!qi':
@@ -39,8 +42,6 @@ class Bot(discord.Client):
                 await message.channel.send(text)
         if keyword == '!addQuote' or keyword == '!aq':
             await message.channel.send(self.add_quote(message))
-        if message.author.id != 372092465349656577:
-            await message.channel.send(message.author.name + " ist dumm")
 
     async def on_ready(self):
         print('Logged in as')
@@ -50,9 +51,12 @@ class Bot(discord.Client):
 
 
     def get_random_quote(self, message, quotes):
-        random_number = random.randint(0, (len(self.quotes) - 1))
-        quote = quotes[random_number]
-        return quote['quote'] + " - " + quote['author']
+        if len(self.quotes) == 0:
+            return "No quotes available"
+        else: 
+            random_number = random.randint(0, (len(self.quotes) - 1))
+            quote = quotes[random_number]
+            return quote['quote'] + " - " + quote['author']
 
     def get_quote_by_id(self, message, quotes):
         quoteId = message.content.split(" ",1)[1]
@@ -84,7 +88,7 @@ class Bot(discord.Client):
         self.quotes.append(quote)
         with open('quotes.json', 'w') as fp:
             json.dump(self.quotes, fp)
-            return "added quote \"" + newQuote + "\" to quotes with id: " + str(lastId)
+            return "added quote \"" + newQuote + "\" to quotes with id " + str(lastId)
 
     def delete_quote_by_id(self, message, quotes):
         quoteId = message.content.split(" ",1)[1]
