@@ -1,32 +1,40 @@
 import json
 import discord
-import asyncio
 import random
-import sys
 import urllib.request
 import googlesearch
-from textwrap import wrap
 from bs4 import BeautifulSoup
 
-TOKEN = 'TOKEN'
+with open('config.json') as json_file:
+    try:
+        data = json.load(json_file)
+    except ValueError:
+        print("config.json does not contain correct json")
+        exit()
 
-class MyClient(discord.Client):
+if data['token'] is None:
+    print("Token not found in config.json. Please check your config.json file.")
+    exit()
+else:
+    TOKEN = data['token']
+
+
+class Bot(discord.Client):
     async def on_message(self, message):
-        # we do not want the bot to reply to itself
-        # json_data=open("quotes.json").read()
-        # quotes = json.loads(json_data)
         if message.author == client.user:
             return
         if message.content.startswith('!quote'):
-            await message.channel.send(get_random_quote(message, quotes))
+            await message.channel.send(self.get_random_quote(message, quotes))
         if message.content.startswith('!lyrics'):
             lyrics = self.get_lyrics(message)
-            x = 1999
-            chunks = ([lyrics[i: i + x] for i in range(0, len(lyrics), x)])
+            if lyrics is None:
+                await message.channel.send("Fehler: Songtext konnte nicht gefunden werden")
+            max_chunk_size = 1999
+            chunks = ([lyrics[i: i + max_chunk_size] for i in range(0, len(lyrics), max_chunk_size)])
             for text in chunks:
                 await message.channel.send(text)
         if message.content.startswith('!addQuote'):
-            await message.channel.send(add_quote(message))
+            await message.channel.send(self.add_quote(message))
 
     async def on_ready(self):
         print('Logged in as')
@@ -35,18 +43,16 @@ class MyClient(discord.Client):
         print('------')
 
     def get_random_quote(self, message, quotes):
-        random_number = random.randint(0, (len(quotes)-1))
+        random_number = random.randint(0, (len(quotes) - 1))
         quote = str(quotes[random_number])
         if "by" not in quote:
             quote = "\"" + str(quotes[random_number]) + "\" - Taylor Swift"
         else:
             quote = "\"" + quote.replace("by ", "\" - ")
-            # msg = '{0.author.mention} {quote}'.format(message)
             return quote
 
-
     def add_quote(self, message):
-        newQuote = message.content.split(" ", 1)[1].replace("\"","")
+        newQuote = message.content.split(" ", 1)[1].replace("\"", "")
         if "by" not in newQuote:
             return "Format: {Zitat} by {Autor}"
         quotes.append(newQuote)
@@ -54,9 +60,8 @@ class MyClient(discord.Client):
             json.dump(quotes, fp)
             return "added quote \"" + newQuote + "\" to quotes"
 
-
     def get_lyrics(self, message):
-        url =""
+        url = ""
         for text in message.content.split(" ", 1):
             url += text
             url += " "
@@ -68,10 +73,9 @@ class MyClient(discord.Client):
                 if len(result) > 0:
                     page = urllib.request.urlopen(result)
                     soup = BeautifulSoup(page.read(), 'html.parser')
-                    lyrics = soup.find(id="lyrics").get_text() 
-                    # if len(lyrics) > 2000:
-                    # print(soup.find(id="lyrics").get_text())
+                    lyrics = soup.find(id="lyrics").get_text()
                     return lyrics
 
-client = MyClient()
+
+client = Bot()
 client.run(TOKEN)
