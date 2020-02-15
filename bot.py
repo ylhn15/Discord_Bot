@@ -37,21 +37,14 @@ class Bot(discord.Client):
             lyrics = self.get_lyrics(searchterm)
             if lyrics is None:
                 await message.channel.send("Fehler: Songtext konnte nicht gefunden werden")
-            max_chunk_size = 1999
-            chunks = ([lyrics[i: i + max_chunk_size] for i in range(0, len(lyrics), max_chunk_size)])
-            for text in chunks:
-                await message.channel.send(text)
+            await self.split_message(message, lyrics, 1999)
         if keyword == '!addQuote' or keyword == '!aq':
             await message.channel.send(self.add_quote(message))
         if  message.content.startswith('!code'):
             self.write_code(message)
             await message.channel.send("Code written...")
         if keyword == '!run':
-            output = self.run_code(message)
-            max_chunk_size = 1995
-            chunks = ([output[i: i + max_chunk_size] for i in range(0, len(output), max_chunk_size)])
-            for text in chunks:
-                await message.channel.send("`" + text + "`")
+            await self.split_message(message, self.run_code(message), 1995, isCode=True)
         if keyword == '!debug':
             await message.channel.send("`" + self.read_code(message) + "`")
         if keyword == '!contribute':
@@ -63,10 +56,21 @@ class Bot(discord.Client):
         print(client.user.id)
         print('------')
 
-    def write_code(self, message):
+    async def split_message(self, message, output, max_chunk_size, isCode = None):
+            chunks = ([output[i: i + max_chunk_size] for i in range(0, len(output), max_chunk_size)])
+            for text in chunks:
+                if isCode is True:
+                    await message.channel.send("`" + text + "`")
+                else:
+                    await message.channel.send(text)
+
+    def get_filename(self, message):
         filename = message.content.split(' ', 1)[1]
         filename = filename.split('\n', 1)[0]
-        output_name = filename.replace('.py', '')
+        return filename
+
+    def write_code(self, message):
+        filename = self.get_filename(message)
         # test = message.content.split("\n", 2)[2].replace("`", "")
         code = "import sys \nsys.stdout = open('output', 'w') \n"
         code = code + message.content.split('\n', 1)[1].replace('`', '')
@@ -75,14 +79,12 @@ class Bot(discord.Client):
         output.write(code)
 
     def run_code(self, message):
-        filename = message.content.split(' ', 1)[1]
-        filename = filename.split('\n', 1)[0]
+        filename = self.get_filename(message)
         os.system("python3 " + filename)
         return self.read_output()
 
     def read_code(self, message):
-        filename = message.content.split(' ', 1)[1]
-        filename = filename.split('\n', 1)[0]
+        filename = self.get_filename(message)
         output = open(filename, 'r')
         return output.read()
 
@@ -111,8 +113,6 @@ class Bot(discord.Client):
             lastQuote = self.quotes[len(self.quotes) - 1]
             try:
                 lastId = int(lastQuote['id']) + 1
-                # if lastId > len(self.quotes) - 1:
-                    # lastId = len(self.quotes)
             except KeyError:
                 lastId = 0
         else:
@@ -164,7 +164,6 @@ class Bot(discord.Client):
             except ValueError:
                 print("config.json does not contain correct json")
                 exit()
-
         if data['token'] is None:
             print("Token not found in config.json. Please check your config.json file.")
             exit()
