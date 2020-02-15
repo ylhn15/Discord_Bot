@@ -13,6 +13,12 @@ Create a config.json file and add the token of the bot in the following format:
 
 Start the python script on your device.
 
+### Dependencies
+Run 
+* `pip3 install google --user`
+* `pip3 install discord --user`
+to install the necessary packages.
+
 ## Commands
 * `!(l)yrics {title}` - Searches for the given title on songtexte.com and returns the lyrics, if available.
 * `!(q)uote` - Returns a random quote from the quotes.json file.
