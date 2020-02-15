@@ -19,5 +19,8 @@ Start the python script on your device.
 * `!(q)uoteWithId/!qi {ID}` - Returns the quote with the specified ID from the quotes.json file.
 * `!addQuote/!aq {Quote} by {Author}` - Adds a quote to the quotes.json - the format is `{Quote} by {Author}`.
 * `!deleteQuote/!dq {ID}` - Deletes the quote with the specified ID from the quotes.json file.
+* `!code {Pythoncode}` Write your own little script directly in Discord.
+* `!run` Run your script.
+* `!debug` Returns the code of your script.
 * `!(h)elp` - Returns this command list
 

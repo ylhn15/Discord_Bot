@@ -19,7 +19,7 @@ class Bot(discord.Client):
         if message.author == client.user:
             return
         if keyword == '!help' or keyword == '!h':
-            help_msg = open("helpmessage.txt", "r").read()
+            help_msg = open('helpmessage.txt', 'r').read()
             await message.channel.send(help_msg + "\n https://github.com/ylhn15/Discord_Bot")
         if keyword == '!quote' or keyword == '!q':
             await message.channel.send(self.get_random_quote(message, self.quotes))
@@ -47,9 +47,15 @@ class Bot(discord.Client):
             self.write_code(message)
             await message.channel.send("Code written...")
         if keyword == '!run':
-            await message.channel.send(self.run_code(message))
+            output = self.run_code(message)
+            max_chunk_size = 1995
+            chunks = ([output[i: i + max_chunk_size] for i in range(0, len(output), max_chunk_size)])
+            for text in chunks:
+                await message.channel.send("`" + text + "`")
         if keyword == '!debug':
             await message.channel.send("`" + self.read_code(message) + "`")
+        if keyword == '!contribute':
+            await message.channel.send("https://github.com/ylhn15/Discord_Bot")
 
     async def on_ready(self):
         print('Logged in as')
@@ -58,30 +64,30 @@ class Bot(discord.Client):
         print('------')
 
     def write_code(self, message):
-        filename = message.content.split(" ", 1)[1]
-        filename = filename.split("\n", 1)[0]
-        output_name = filename.replace(".py", "")
+        filename = message.content.split(' ', 1)[1]
+        filename = filename.split('\n', 1)[0]
+        output_name = filename.replace('.py', '')
         # test = message.content.split("\n", 2)[2].replace("`", "")
         code = "import sys \nsys.stdout = open('output', 'w') \n"
-        code = code + message.content.split("\n", 1)[1].replace("`", "")
-        code = code + "\n"
-        output = open(filename, "w")
+        code = code + message.content.split('\n', 1)[1].replace('`', '')
+        code = code + '\n'
+        output = open(filename, 'w')
         output.write(code)
 
     def run_code(self, message):
-        filename = message.content.split(" ", 1)[1]
-        filename = filename.split("\n", 1)[0]
+        filename = message.content.split(' ', 1)[1]
+        filename = filename.split('\n', 1)[0]
         os.system("python3 " + filename)
         return self.read_output()
 
     def read_code(self, message):
-        filename = message.content.split(" ", 1)[1]
-        filename = filename.split("\n", 1)[0]
-        output = open(filename, "r")
+        filename = message.content.split(' ', 1)[1]
+        filename = filename.split('\n', 1)[0]
+        output = open(filename, 'r')
         return output.read()
 
     def read_output(self):
-        output = open("output", "r")
+        output = open('output', 'r')
         return output.read()
 
     def get_random_quote(self, message, quotes):
@@ -111,8 +117,8 @@ class Bot(discord.Client):
                 lastId = 0
         else:
             lastId = 0
-        newQuote = message.content.split(" ", 1)[1].replace("\"", "")
-        if "by" not in newQuote:
+        newQuote = message.content.split(' ', 1)[1].replace('\"', '')
+        if 'by' not in newQuote:
             return "Format: {Zitat} by {Autor}"
         quote = {
             "id" : lastId,
@@ -136,19 +142,19 @@ class Bot(discord.Client):
         return "Quote not found"
 
     def get_lyrics(self, searchterm):
-        url = ""
+        url = ''
         for text in  searchterm:
             url += text
-            url += " "
-            url += "lyrics"
+            url += ' '
+            url += 'lyrics'
         search_results = googlesearch.search(url, stop=100)
         for result in search_results:
-            if "songtexte.com" in result:
+            if 'songtexte.com' in result:
                 print(result)
                 if len(result) > 0:
                     page = urllib.request.urlopen(result)
                     soup = BeautifulSoup(page.read(), 'html.parser')
-                    lyrics = soup.find(id="lyrics").get_text()
+                    lyrics = soup.find(id='lyrics').get_text()
                     return lyrics
 
     def getBotToken(self):
