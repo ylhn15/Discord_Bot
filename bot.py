@@ -1,4 +1,5 @@
 import json
+import os
 import discord
 import random
 import urllib.request
@@ -18,7 +19,7 @@ class Bot(discord.Client):
         if message.author == client.user:
             return
         if keyword == '!help' or keyword == '!h':
-            help_msg = "!(q)uote - random quote. \n!quoteWithId/!qi {id] - quote with given ID. \n!deleteQuote/!qd {ID] - delete quote with given ID. \n!(l)yrics {searchterm} - search songtexte.com for given searchterm and returns the lyrics. \n!addQuote/!aq {Zitat} by {Author} - add quote to the databse.\n "
+            help_msg = open("helpmessage.txt", "r").read()
             await message.channel.send(help_msg + "\n https://github.com/ylhn15/Discord_Bot")
         if keyword == '!quote' or keyword == '!q':
             await message.channel.send(self.get_random_quote(message, self.quotes))
@@ -42,6 +43,13 @@ class Bot(discord.Client):
                 await message.channel.send(text)
         if keyword == '!addQuote' or keyword == '!aq':
             await message.channel.send(self.add_quote(message))
+        if  message.content.startswith('!code'):
+            self.write_code(message)
+            await message.channel.send("Code written...")
+        if keyword == '!run':
+            await message.channel.send(self.run_code(message))
+        if keyword == '!debug':
+            await message.channel.send("`" + self.read_code(message) + "`")
 
     async def on_ready(self):
         print('Logged in as')
@@ -49,11 +57,37 @@ class Bot(discord.Client):
         print(client.user.id)
         print('------')
 
+    def write_code(self, message):
+        filename = message.content.split(" ", 1)[1]
+        filename = filename.split("\n", 1)[0]
+        output_name = filename.replace(".py", "")
+        # test = message.content.split("\n", 2)[2].replace("`", "")
+        code = "import sys \nsys.stdout = open('output', 'w') \n"
+        code = code + message.content.split("\n", 1)[1].replace("`", "")
+        code = code + "\n"
+        output = open(filename, "w")
+        output.write(code)
+
+    def run_code(self, message):
+        filename = message.content.split(" ", 1)[1]
+        filename = filename.split("\n", 1)[0]
+        os.system("python3 " + filename)
+        return self.read_output()
+
+    def read_code(self, message):
+        filename = message.content.split(" ", 1)[1]
+        filename = filename.split("\n", 1)[0]
+        output = open(filename, "r")
+        return output.read()
+
+    def read_output(self):
+        output = open("output", "r")
+        return output.read()
 
     def get_random_quote(self, message, quotes):
         if len(self.quotes) == 0:
             return "No quotes available"
-        else: 
+        else:
             random_number = random.randint(0, (len(self.quotes) - 1))
             quote = quotes[random_number]
             return quote['quote'] + " - " + quote['author']

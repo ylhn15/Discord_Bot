@@ -1,0 +1,8 @@
+`!(q)uote` - random quote.
+`!quoteWithId/!qi {id}` - quote with given ID.
+`!deleteQuote/!qd {ID}` - delete quote with given ID.
+`!(l)yrics {searchterm}` - search songtexte.com for given searchterm and returns the lyrics.
+`!addQuote/!aq {Zitat} by {Author}` - add quote to the databse.
+`!code {Pythoncode}` Write your own little script directly in Discord.
+`!run` Run your script.
+`!debug` Returns the code of your script.
